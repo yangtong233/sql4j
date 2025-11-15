@@ -1,0 +1,108 @@
+package org.ytor.sql4j.sql.select;
+
+import org.ytor.sql4j.sql.*;
+import org.ytor.sql4j.enums.JoinType;
+import org.ytor.sql4j.enums.OrderType;
+
+import java.util.function.Consumer;
+
+/**
+ * JOIN 阶段
+ */
+public class JoinStage extends AbsSelect {
+
+    /**
+     * 连接类型
+     */
+    public JoinType joinType;
+
+    /**
+     * 连接表
+     */
+    public Class<?> joinTable;
+
+    /**
+     * 连接条件
+     */
+    public Consumer<ConditionExpressionBuilder> on;
+
+    public JoinStage(JoinType joinType, Class<?> joinTable, SelectBuilder selectBuilder, Consumer<ConditionExpressionBuilder> on) {
+        this.joinType = joinType;
+        this.joinTable = joinTable;
+        setSelectBuilder(selectBuilder);
+        getSelectBuilder().addJoinStages(this);
+        this.on = on;
+
+        // 注册表别名
+        getSelectBuilder().addAlias(joinTable);
+    }
+
+    /**
+     * JOIN 后可能是 WHERE 子句
+     */
+    public SelectWhereStage where(Consumer<ConditionExpressionBuilder> where) {
+        return new SelectWhereStage(getSelectBuilder(), where);
+    }
+
+    /**
+     * JOIN 后可能是 LEFT JOIN 子句
+     */
+    public JoinStage leftJoin(Class<?> joinTable, Consumer<ConditionExpressionBuilder> on) {
+        return new JoinStage(JoinType.LEFT_JOIN, joinTable, getSelectBuilder(), on);
+    }
+
+    /**
+     * JOIN 后可能是 RIGHT JOIN 子句
+     */
+    public JoinStage rightJoin(Class<?> joinTable, Consumer<ConditionExpressionBuilder> on) {
+        return new JoinStage(JoinType.RIGHT_JOIN, joinTable, getSelectBuilder(), on);
+    }
+
+    /**
+     * JOIN 后可能是 INNER JOIN 子句
+     */
+    public JoinStage innerJoin(Class<?> joinTable, Consumer<ConditionExpressionBuilder> on) {
+        return new JoinStage(JoinType.INNER_JOIN, joinTable, getSelectBuilder(), on);
+    }
+
+    /**
+     * JOIN 后可能是 GROUP BY 子句
+     */
+    public GroupByStage groupBy(SFunction<?, ?> groupFields) {
+        return new GroupByStage(getSelectBuilder(), groupFields);
+    }
+
+    /**
+     * JOIN 后可能是 ORDER BY 子句
+     */
+    public OrderByStage orderBy(SFunction<?, ?> orderField, OrderType orderType) {
+        return new OrderByStage(getSelectBuilder(), new OrderItem(orderField, orderType));
+    }
+
+    /**
+     * JOIN 后可能是 LIMIT 子句
+     */
+    public LimitStage limit(Long limit) {
+        return new LimitStage(getSelectBuilder(), limit);
+    }
+
+    /**
+     * JOIN 后可能结束
+     */
+    public SqlInfo end() {
+        return getSelectBuilder().getTranslator().translate(getSelectBuilder());
+    }
+
+    public JoinType getJoinType() {
+        return joinType;
+    }
+
+    public Class<?> getJoinTable() {
+        return joinTable;
+    }
+
+    public Consumer<ConditionExpressionBuilder> getOn() {
+        return on;
+    }
+
+}

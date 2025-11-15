@@ -157,6 +157,18 @@ public class ExpressionBuilder extends AbsSql {
     }
 
     /**
+     * LIKE：column like value
+     */
+    public <T> ExpressionBuilder like(SFunction<T, ?> column, Object value) {
+        appendPredicateStart();
+        String left = LambdaUtil.parseColumn(column, register);
+        String right = parsePlaceholder(value);
+        expression.append(left).append(SPACE).append("LIKE").append(SPACE).append(right);
+        lastType = SegmentType.PREDICATE;
+        return this;
+    }
+
+    /**
      * IS NULL
      */
     public <T> ExpressionBuilder isNull(SFunction<T, ?> column) {

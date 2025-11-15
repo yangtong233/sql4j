@@ -18,7 +18,7 @@ public class UpdateStage extends AbsUpdate {
     /**
      * UPDATE 后面一定是 SET 阶段
      */
-    public final SetStage set(SFunction<?, ?> updatedColumn, Object value) {
+    public final <T> SetStage set(SFunction<T, ?> updatedColumn, Object value) {
         return new SetStage(getUpdateBuilder()).set(updatedColumn, value);
     }
 

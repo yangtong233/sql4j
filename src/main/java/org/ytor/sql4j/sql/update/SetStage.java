@@ -26,7 +26,7 @@ public class SetStage extends AbsUpdate {
     /**
      * SET 后，可能继续 SET
      */
-    public final SetStage set(SFunction<?, ?> updatedColumn, Object value) {
+    public final <T> SetStage set(SFunction<T, ?> updatedColumn, Object value) {
         updatedColumnValueMapper.put(updatedColumn, value);
         return this;
     }

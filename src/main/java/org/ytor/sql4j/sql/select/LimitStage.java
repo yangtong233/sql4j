@@ -7,9 +7,9 @@ import org.ytor.sql4j.sql.SqlInfo;
  */
 public class LimitStage extends AbsSelect {
 
-    private final Long limit;
+    private final Integer limit;
 
-    public LimitStage(SelectBuilder selectBuilder, Long limit) {
+    public LimitStage(SelectBuilder selectBuilder, Integer limit) {
         setSelectBuilder(selectBuilder);
         getSelectBuilder().setLimitStage(this);
         this.limit = limit;
@@ -18,7 +18,7 @@ public class LimitStage extends AbsSelect {
     /**
      * LIMIT 后可能是 OFFSET 子句
      */
-    public OffsetStage offset(Long offset) {
+    public OffsetStage offset(Integer offset) {
         return new OffsetStage(getSelectBuilder(), offset);
     }
 
@@ -29,7 +29,7 @@ public class LimitStage extends AbsSelect {
         return getSelectBuilder().getTranslator().translate(getSelectBuilder());
     }
 
-    public Long getLimit() {
+    public Integer getLimit() {
         return limit;
     }
 

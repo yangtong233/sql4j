@@ -11,6 +11,7 @@ import org.ytor.sql4j.util.TableUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +33,11 @@ public class BaseSelectTranslator implements ISelectTranslator {
         sql.append("SELECT ").append(selectColumnStr).append(' ');
 
         // 2.FORM 表
-        Class<?> mainTable = builder.getFromStage().getMainTable();
+        FromStage fromStage = builder.getFromStage();
+        if (fromStage == null) {
+            return new SqlInfo(SqlType.SELECT, sql.toString(), orderedParms);
+        }
+        Class<?> mainTable = fromStage.getMainTable();
         String tableName = TableUtil.parseTableNameFromClass(mainTable);
         String alias = builder.getAlias(mainTable);
         sql.append("FROM ").append(tableName).append(' ');
@@ -41,44 +46,55 @@ public class BaseSelectTranslator implements ISelectTranslator {
         }
 
         // 3. JOIN 关联表，JOIN 子句中可能会出现占位符参数
-        for (JoinStage join : builder.getJoinStages()) {
-            Class<?> joinTable = join.getJoinTable();
-            String joinTableName = TableUtil.parseTableNameFromClass(joinTable);
-            String joinTableAliasName = builder.getAlias(joinTable);
-            String joinKey = join.getJoinType().getJoinKey();
-            sql.append(joinKey).append(' ').append(joinTableName).append(' ');
-            if (joinTableAliasName != null) {
-                sql.append(joinTableAliasName).append(' ');
-            }
-            if (join.getOn() != null) {
-                ConditionExpressionBuilder onExpressionBuilder = new ConditionExpressionBuilder(builder);
-                join.getOn().accept(onExpressionBuilder);
-                String onExpression = onExpressionBuilder.build();
-                if (!onExpression.isEmpty()) {
-                    sql.append("ON ").append(onExpression).append(' ');
-                    // 收集 ON 子句中的参数
-                    orderedParms.addAll(onExpressionBuilder.getParams());
+        List<JoinStage> joinStages = builder.getJoinStages();
+        if (joinStages != null && !joinStages.isEmpty()) {
+            for (JoinStage join : joinStages) {
+                Class<?> joinTable = join.getJoinTable();
+                String joinTableName = TableUtil.parseTableNameFromClass(joinTable);
+                String joinTableAliasName = builder.getAlias(joinTable);
+                String joinKey = join.getJoinType().getJoinKey();
+                sql.append(joinKey).append(' ').append(joinTableName).append(' ');
+                if (joinTableAliasName != null) {
+                    sql.append(joinTableAliasName).append(' ');
+                }
+                if (join.getOn() != null) {
+                    ConditionExpressionBuilder onExpressionBuilder = new ConditionExpressionBuilder(builder);
+                    join.getOn().accept(onExpressionBuilder);
+                    String onExpression = onExpressionBuilder.build();
+                    if (!onExpression.isEmpty()) {
+                        sql.append("ON ").append(onExpression).append(' ');
+                        // 收集 ON 子句中的参数
+                        orderedParms.addAll(onExpressionBuilder.getParams());
+                    }
                 }
             }
         }
 
+
         // 4. WHERE 子句，WHERE 子句中可能会出现占位符参数
-        ConditionExpressionBuilder whereExpressionBuilder = new ConditionExpressionBuilder(builder);
-        builder.getWhereStage().getWhere().accept(whereExpressionBuilder);
-        String whereExpression = whereExpressionBuilder.build();
-        if (!whereExpression.isEmpty()) {
-            sql.append("WHERE ").append(whereExpression).append(' ');
-            // 收集 WHERE 子句的参数
-            orderedParms.addAll(whereExpressionBuilder.getParams());
+        SelectWhereStage selectWhereStage = builder.getWhereStage();
+        if (selectWhereStage != null) {
+            Consumer<ConditionExpressionBuilder> where = selectWhereStage.getWhere();
+            ConditionExpressionBuilder whereExpressionBuilder = new ConditionExpressionBuilder(builder);
+            where.accept(whereExpressionBuilder);
+            String whereExpression = whereExpressionBuilder.build();
+            if (!whereExpression.isEmpty()) {
+                sql.append("WHERE ").append(whereExpression).append(' ');
+                // 收集 WHERE 子句的参数
+                orderedParms.addAll(whereExpressionBuilder.getParams());
+            }
         }
 
         // 5. GROUP BY 子句
-        List<SFunction<?, ?>> groupByColumns = builder.getGroupByStage().getGroupColumn();
-        if (groupByColumns != null && !groupByColumns.isEmpty()) {
-            String groupByColumn = groupByColumns.stream()
-                    .map(f -> LambdaUtil.parseColumn(f, builder))
-                    .collect(Collectors.joining(", "));
-            sql.append("GROUP BY ").append(groupByColumn).append(' ');
+        GroupByStage groupByStage = builder.getGroupByStage();
+        if (groupByStage != null) {
+            List<SFunction<?, ?>> groupByColumns = groupByStage.getGroupColumn();
+            if (groupByColumns != null && !groupByColumns.isEmpty()) {
+                String groupByColumn = groupByColumns.stream()
+                        .map(f -> LambdaUtil.parseColumn(f, builder))
+                        .collect(Collectors.joining(", "));
+                sql.append("GROUP BY ").append(groupByColumn).append(' ');
+            }
         }
 
         // 6. HAVING 条件，HAVING 子句中可能会出现占位符参数

@@ -61,6 +61,12 @@ public class ConditionExpressionBuilder extends ExpressionBuilder {
     }
 
     @Override
+    public <T> ExpressionBuilder like(SFunction<T, ?> column, Object value) {
+        super.like(column, value);
+        return this;
+    }
+
+    @Override
     public <T> ConditionExpressionBuilder isNull(SFunction<T, ?> column) {
         super.isNull(column);
         return this;
@@ -174,6 +180,16 @@ public class ConditionExpressionBuilder extends ExpressionBuilder {
     public <T> ConditionExpressionBuilder le(boolean condition, SFunction<T, ?> column, Object value) {
         if (condition) {
             return le(column, value);
+        }
+        return this;
+    }
+
+    /**
+     * LIKE：column like value
+     */
+    public <T> ExpressionBuilder like(boolean condition, SFunction<T, ?> column, Object value) {
+        if (condition) {
+            return like(column, value);
         }
         return this;
     }

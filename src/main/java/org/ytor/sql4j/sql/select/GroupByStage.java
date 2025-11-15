@@ -19,7 +19,7 @@ public class GroupByStage extends AbsSelect {
      * @param selectBuilder SELECT 构造器
      * @param groupColumn 分组字段
      */
-    public GroupByStage(SelectBuilder selectBuilder, SFunction<?, ?> groupColumn) {
+    public <T> GroupByStage(SelectBuilder selectBuilder, SFunction<T, ?> groupColumn) {
         setSelectBuilder(selectBuilder);
         getSelectBuilder().setGroupByStage(this);
         this.groupColumn.add(groupColumn);
@@ -30,7 +30,7 @@ public class GroupByStage extends AbsSelect {
      * @param selectBuilder SELECT 构造器
      * @param groupColumn 分组字段
      */
-    public GroupByStage(SelectBuilder selectBuilder, List<SFunction<?, ?>> groupColumn) {
+    public <T> GroupByStage(SelectBuilder selectBuilder, List<SFunction<T, ?>> groupColumn) {
         setSelectBuilder(selectBuilder);
         getSelectBuilder().setGroupByStage(this);
         this.groupColumn.addAll(groupColumn);
@@ -39,21 +39,21 @@ public class GroupByStage extends AbsSelect {
     /**
      * GROUP BY 后可能是 HAVING 子句
      */
-    public HavingStage orderBy(Consumer<ConditionExpressionBuilder> where) {
+    public HavingStage having(Consumer<ConditionExpressionBuilder> where) {
         return new HavingStage(getSelectBuilder(), where);
     }
 
     /**
      * GROUP BY 后可能是 ORDER BY 子句
      */
-    public OrderByStage orderBy(SFunction<?, ?> orderColumn, OrderType orderType) {
+    public <T> OrderByStage orderBy(SFunction<T, ?> orderColumn, OrderType orderType) {
         return new OrderByStage(getSelectBuilder(), new OrderItem(orderColumn, orderType));
     }
 
     /**
      * GROUP BY 后可能是 LIMIT 子句
      */
-    public LimitStage limit(Long limit) {
+    public LimitStage limit(Integer limit) {
         return new LimitStage(getSelectBuilder(), limit);
     }
 

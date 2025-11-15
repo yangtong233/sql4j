@@ -35,7 +35,7 @@ public class SelectWhereStage extends AbsSelect {
     /**
      * WHERE 后可能是 LIMIT 子句
      */
-    public LimitStage limit(Long limit) {
+    public LimitStage limit(Integer limit) {
         return new LimitStage(getSelectBuilder(), limit);
     }
 

@@ -21,14 +21,14 @@ public class HavingStage extends AbsSelect {
     /**
      * HAVING 后可能是 ORDER BY 子句
      */
-    public OrderByStage orderBy(SFunction<?, ?> orderColumn, OrderType orderType) {
+    public <T> OrderByStage orderBy(SFunction<T, ?> orderColumn, OrderType orderType) {
         return new OrderByStage(getSelectBuilder(), new OrderItem(orderColumn, orderType));
     }
 
     /**
      * HAVING 后可能是 LIMIT 子句
      */
-    public LimitStage limit(Long limit) {
+    public LimitStage limit(Integer limit) {
         return new LimitStage(getSelectBuilder(), limit);
     }
 

@@ -11,12 +11,12 @@ import java.util.List;
  */
 public class IntoStage extends AbsInsert {
 
-    private final List<SFunction<?, ?>> insertedColumn;
+    private final List<SFunction<?, ?>> insertedColumn = new  ArrayList<>();
 
-    public IntoStage(InsertBuilder insertBuilder, List<SFunction<?, ?>> insertedColumn) {
+    public <T> IntoStage(InsertBuilder insertBuilder, List<SFunction<T, ?>> insertedColumn) {
         setInsertBuilder(insertBuilder);
         getInsertBuilder().setIntoStage(this);
-        this.insertedColumn = insertedColumn;
+        this.insertedColumn.addAll(insertedColumn);
     }
 
     /**

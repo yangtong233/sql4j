@@ -7,9 +7,9 @@ import org.ytor.sql4j.sql.SqlInfo;
  */
 public class OffsetStage extends AbsSelect {
 
-    private final Long offset;
+    private final Integer offset;
 
-    public OffsetStage(SelectBuilder selectBuilder, Long offset) {
+    public OffsetStage(SelectBuilder selectBuilder, Integer offset) {
         setSelectBuilder(selectBuilder);
         getSelectBuilder().setOffsetStage(this);
         this.offset = offset;
@@ -22,7 +22,7 @@ public class OffsetStage extends AbsSelect {
         return getSelectBuilder().getTranslator().translate(getSelectBuilder());
     }
 
-    public Long getOffset() {
+    public Integer getOffset() {
         return offset;
     }
 }

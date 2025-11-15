@@ -41,16 +41,6 @@ public class ExecResult {
      */
     private Long executionTime;
 
-    /**
-     * SQL 执行错误信息
-     */
-    private String errorMessage;
-
-    /**
-     *  执行是否成功
-     */
-    private Boolean isSuccess;
-
     public SqlInfo getSqlInfo() {
         return sqlInfo;
     }
@@ -97,21 +87,5 @@ public class ExecResult {
 
     public void setExecutionTime(Long executionTime) {
         this.executionTime = executionTime;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
-    public Boolean getSuccess() {
-        return isSuccess;
-    }
-
-    public void setSuccess(Boolean success) {
-        isSuccess = success;
     }
 }

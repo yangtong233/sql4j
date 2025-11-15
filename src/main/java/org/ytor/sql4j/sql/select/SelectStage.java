@@ -17,7 +17,7 @@ public class SelectStage extends AbsSelect {
      */
     private final List<SFunction<?, ?>> selectColumn = new ArrayList<>();
 
-    public SelectStage(SelectBuilder selectBuilder, SFunction<?, ?> selectColumn) {
+    public <T> SelectStage(SelectBuilder selectBuilder, SFunction<T, ?> selectColumn) {
         setSelectBuilder(selectBuilder);
         selectBuilder.setSelectStage(this);
         this.selectColumn.add(selectColumn);

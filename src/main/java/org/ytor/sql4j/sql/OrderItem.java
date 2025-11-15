@@ -17,12 +17,12 @@ public class OrderItem {
      */
     private OrderType orderType;
 
-    public OrderItem(SFunction<?, ?> orderColumn, OrderType orderType) {
+    public <T> OrderItem(SFunction<T, ?> orderColumn, OrderType orderType) {
         this.orderColumn = orderColumn;
         this.orderType = orderType;
     }
 
-    public void setOrderColumn(SFunction<?, ?> orderColumn) {
+    public <T> void setOrderColumn(SFunction<T, ?> orderColumn) {
         this.orderColumn = orderColumn;
     }
 

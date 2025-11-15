@@ -25,7 +25,7 @@ public class SqlInfo {
 
     public SqlInfo(SqlType sqlType, String sql, List<Object> orderedParms) {
         this.sqlType = sqlType;
-        this.sql = sql;
+        this.sql = sql.trim();
         this.orderedParms = orderedParms;
     }
 

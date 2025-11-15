@@ -30,7 +30,7 @@ public class OrderByStage extends AbsSelect {
     /**
      * ORDER BY 后可能继续 ORDER BY
      */
-    public OrderByStage orderBy(SFunction<?, ?> orderColumn, OrderType orderType) {
+    public <T> OrderByStage orderBy(SFunction<T, ?> orderColumn, OrderType orderType) {
         return orderBy(new OrderItem(orderColumn, orderType));
     }
 
@@ -45,7 +45,7 @@ public class OrderByStage extends AbsSelect {
     /**
      * ORDER BY 后可能是 LIMIT 子句
      */
-    public LimitStage limit(Long limit) {
+    public LimitStage limit(Integer limit) {
         return new LimitStage(getSelectBuilder(), limit);
     }
 

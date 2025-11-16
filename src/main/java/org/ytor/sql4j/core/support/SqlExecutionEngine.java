@@ -1,8 +1,10 @@
 package org.ytor.sql4j.core.support;
 
+import org.ytor.sql4j.Sql4JException;
 import org.ytor.sql4j.core.ExecResult;
 import org.ytor.sql4j.core.IConnectionProvider;
 import org.ytor.sql4j.core.ISqlExecutionEngine;
+import org.ytor.sql4j.core.SQLHelper;
 import org.ytor.sql4j.enums.DatabaseType;
 import org.ytor.sql4j.sql.SqlInfo;
 
@@ -18,16 +20,22 @@ import java.util.Map;
 public class SqlExecutionEngine implements ISqlExecutionEngine {
 
     /**
+     * SQLHelper
+     */
+    private final SQLHelper sqlHelper;
+
+    /**
      * 数据库连接提供者
      */
     private final IConnectionProvider connectionProvider;
 
-    public SqlExecutionEngine(IConnectionProvider connectionProvider) {
-        this.connectionProvider = connectionProvider;
+    public SqlExecutionEngine(SQLHelper sqlHelper) {
+        this.sqlHelper = sqlHelper;
+        this.connectionProvider = sqlHelper.getConnectionProvider();
     }
 
     @Override
-    public ExecResult executeQuery(SqlInfo sqlInfo) throws SQLException {
+    public ExecResult executeQuery(SqlInfo sqlInfo) {
         long startTime = System.currentTimeMillis();
         try (Connection connection = connectionProvider.getConnection()) {
             // 获取数据库的元数据
@@ -55,11 +63,13 @@ public class SqlExecutionEngine implements ISqlExecutionEngine {
                     return createExecResult(sqlInfo, DatabaseType.fromString(connectionMetaData.getDatabaseProductName()), resultList, null, null, System.currentTimeMillis() - startTime);
                 }
             }
+        } catch (SQLException e) {
+            throw new Sql4JException(e);
         }
     }
 
     @Override
-    public ExecResult executeInsert(SqlInfo sqlInfo) throws SQLException {
+    public ExecResult executeInsert(SqlInfo sqlInfo) {
         long startTime = System.currentTimeMillis();
         try (Connection connection = connectionProvider.getConnection()) {
             // 获取数据库的元数据
@@ -79,11 +89,13 @@ public class SqlExecutionEngine implements ISqlExecutionEngine {
                     return createExecResult(sqlInfo, DatabaseType.fromString(connectionMetaData.getDatabaseProductName()), null, (long) affectedRows, ids, System.currentTimeMillis() - startTime);
                 }
             }
+        } catch (SQLException e) {
+            throw new Sql4JException(e);
         }
     }
 
     @Override
-    public ExecResult executeUpdate(SqlInfo sqlInfo) throws SQLException {
+    public ExecResult executeUpdate(SqlInfo sqlInfo) {
         long startTime = System.currentTimeMillis();
         try (Connection connection = connectionProvider.getConnection()) {
             // 获取数据库的元数据
@@ -96,11 +108,13 @@ public class SqlExecutionEngine implements ISqlExecutionEngine {
                 int affectedRows = statement.executeUpdate();
                 return createExecResult(sqlInfo, DatabaseType.fromString(connectionMetaData.getDatabaseProductName()), null, (long) affectedRows, null, System.currentTimeMillis() - startTime);
             }
+        } catch (SQLException e) {
+            throw new Sql4JException(e);
         }
     }
 
     @Override
-    public ExecResult executeDelete(SqlInfo sqlInfo) throws SQLException {
+    public ExecResult executeDelete(SqlInfo sqlInfo) {
         // DELETE 和 UPDATE 的处理方式一样
         return executeUpdate(sqlInfo);
     }
@@ -108,10 +122,15 @@ public class SqlExecutionEngine implements ISqlExecutionEngine {
     /**
      * SQL 参数绑定
      */
-    private void setParameters(PreparedStatement statement, List<Object> params) throws SQLException {
-        for (int i = 0; i < params.size(); i++) {
-            statement.setObject(i + 1, params.get(i));
+    private void setParameters(PreparedStatement statement, List<Object> params) {
+        try {
+            for (int i = 0; i < params.size(); i++) {
+                statement.setObject(i + 1, params.get(i));
+            }
+        } catch (SQLException e) {
+            throw new Sql4JException(e);
         }
+
     }
 
     /**
@@ -120,6 +139,7 @@ public class SqlExecutionEngine implements ISqlExecutionEngine {
     private ExecResult createExecResult(SqlInfo sqlInfo, DatabaseType databaseType, List<Map<String, Object>> resultList,
                                         Long effectedRows, List<Object> ids, Long executionTime) {
         ExecResult execResult = new ExecResult();
+        execResult.setSqlHelper(sqlHelper);
         execResult.setSqlInfo(sqlInfo);
         execResult.setDatabaseType(databaseType);
         execResult.setResultList(resultList);

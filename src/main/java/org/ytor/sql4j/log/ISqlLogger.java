@@ -3,7 +3,7 @@ package org.ytor.sql4j.log;
 /**
  * SQL日志记录
  */
-public interface ISqlLog {
+public interface ISqlLogger {
 
     /**
      * 错误日志

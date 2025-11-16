@@ -1,11 +1,11 @@
 package org.ytor.sql4j.log.support;
 
-import org.ytor.sql4j.log.ISqlLog;
+import org.ytor.sql4j.log.ISqlLogger;
 
 /**
  * 默认的 SQL 日志记录器
  */
-public class DefaultSqlLog implements ISqlLog {
+public class DefaultSqlLogger implements ISqlLogger {
     @Override
     public void error(String msg) {
         System.err.println(msg);

@@ -1,6 +1,10 @@
 package org.ytor.sql4j.core;
 
+import org.ytor.sql4j.caster.TypeCaster;
+import org.ytor.sql4j.caster.TypeCasterRegister;
 import org.ytor.sql4j.core.support.SqlExecutionEngine;
+import org.ytor.sql4j.log.ISqlLogger;
+import org.ytor.sql4j.log.support.DefaultSqlLogger;
 import org.ytor.sql4j.sql.SFunction;
 import org.ytor.sql4j.sql.delete.DeleteBuilder;
 import org.ytor.sql4j.sql.delete.DeleteStage;
@@ -23,6 +27,11 @@ public class SQLHelper {
     private ITranslator translator = new BaseTranslator();
 
     /**
+     * 类型转换器
+     */
+    private TypeCaster typeCaster = new  TypeCaster();
+
+    /**
      * 数据库连接提供者
      */
     private IConnectionProvider connectionProvider;
@@ -32,12 +41,25 @@ public class SQLHelper {
      */
     private ISqlExecutionEngine sqlExecutionEngine;
 
+    /**
+     * SQL 日志记录器
+     */
+    private ISqlLogger logger = new DefaultSqlLogger();
+
     public void registerTranslator(ITranslator translator) {
         this.translator = translator;
     }
 
     public ITranslator getTranslator() {
         return translator;
+    }
+
+    public void registerTypeCaster(TypeCaster typeCaster) {
+        this.typeCaster = typeCaster;
+    }
+
+    public TypeCaster getTypeCaster() {
+        return typeCaster;
     }
 
     /**
@@ -55,15 +77,29 @@ public class SQLHelper {
         return connectionProvider;
     }
 
+    /**
+     * 初始化 SQL 执行引擎
+     */
     public void initSqlExecutionEngine() {
         if (connectionProvider == null) {
             throw new NullPointerException("请提供 ConnectionProvider 组件");
         }
-        sqlExecutionEngine = new SqlExecutionEngine(connectionProvider);
+        sqlExecutionEngine = new SqlExecutionEngine(this);
     }
 
     public ISqlExecutionEngine getSqlExecutionEngine() {
         return sqlExecutionEngine;
+    }
+
+    /**
+     * 注册 SQL 日志记录器
+     */
+    public void registerLogger(ISqlLogger logger) {
+        this.logger = logger;
+    }
+
+    public ISqlLogger getLogger() {
+        return logger;
     }
 
     @SafeVarargs

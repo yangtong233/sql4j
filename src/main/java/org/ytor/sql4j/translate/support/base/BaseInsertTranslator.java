@@ -36,7 +36,7 @@ public class BaseInsertTranslator implements IInsertTranslator {
         List<SFunction<?, ?>> columns = builder.getIntoStage().getInsertedColumn();
         if (columns != null && !columns.isEmpty()) {
             String columnStr = columns.stream()
-                    .map(column -> LambdaUtil.parseMethodName(LambdaUtil.serializedLambda(column)))
+                    .map(column -> LambdaUtil.parseColumn(column, null))
                     .collect(Collectors.joining(", "));
             sql.append("(").append(columnStr).append(") ");
         }

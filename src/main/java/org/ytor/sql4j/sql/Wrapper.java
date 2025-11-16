@@ -19,6 +19,10 @@ public class Wrapper {
         return formatVal(value);
     }
 
+    public static Wrapper of(Object value) {
+        return new Wrapper(value);
+    }
+
     /**
      * 把 Java 值格式化为 SQL 字面量
      */

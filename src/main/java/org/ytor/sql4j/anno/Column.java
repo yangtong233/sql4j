@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
  * 数据库表字段
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.TYPE})
+@Target(value = {ElementType.FIELD})
 public @interface Column {
 
     /**

@@ -36,7 +36,13 @@ public class BaseTranslator implements ITranslator {
         sqlBuilder.getSQLHelper().getLogger().info(" ===>\t" + sqlInfo.getSql());
         // 记录参数
         String orderedParmStr = "[ " +
-                sqlInfo.getOrderedParms().stream().map(i -> i + "(" + i.getClass().getSimpleName() + ")").collect(Collectors.joining(", ")) +
+                sqlInfo.getOrderedParms().stream().map(i -> {
+                    if (i == null) {
+                        return "NULL( NULL )";
+                    } else {
+                       return i + "(" + i.getClass().getSimpleName() + ")";
+                    }
+                }).collect(Collectors.joining(", ")) +
                 " ]";
         sqlBuilder.getSQLHelper().getLogger().info(" ===>\t" + orderedParmStr);
         return sqlInfo;

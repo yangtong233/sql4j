@@ -1,10 +1,12 @@
 package org.ytor.sql4j.util;
 
 import org.ytor.sql4j.Sql4JException;
+import org.ytor.sql4j.anno.Column;
 import org.ytor.sql4j.sql.AliasRegister;
 import org.ytor.sql4j.sql.SFunction;
 
 import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -58,31 +60,47 @@ public class LambdaUtil {
      */
     public static String parseMethodName(SerializedLambda sl) {
         String methodName = sl.getImplMethodName();
-
         if (methodName == null) {
             throw new Sql4JException("方法名称不能为空！");
         }
-        if (methodName.startsWith("get")) {
-            methodName = methodName.substring(3);
-        } else if (methodName.startsWith("is")) {
-            methodName = methodName.substring(2);
-        }
-        return StrUtil.toLowerUnderline(methodName);
+        return methodName;
     }
 
     /**
      * 解析出拼接到SQL里面的字段，比如user.user_name
      */
     public static <T> String parseColumn(SFunction<T, ?> fn, AliasRegister register) {
-        SerializedLambda sl = serializedLambda(fn);
-        StringBuilder sb = new StringBuilder();
-        // 如果不是单表，则要查表别名
-        if (register != null && !register.single()) {
-            String alias = register.getAlias(parseClassPath(sl));
-            sb.append(alias).append('.');
+        try {
+            SerializedLambda sl = serializedLambda(fn);
+            Class<?> clazz = parseClass(sl);
+            StringBuilder sb = new StringBuilder();
+            // 如果不是单表，则要查表别名
+            if (register != null && !register.single()) {
+                String alias = register.getAlias(clazz);
+                sb.append(alias).append('.');
+            }
+
+            // 方法名称
+            String methodName = parseMethodName(sl);
+            // 对应的字段名称
+            String fieldName;
+            if (methodName.startsWith("get")) {
+                methodName = methodName.substring(3);
+            } else if (methodName.startsWith("is")) {
+                methodName = methodName.substring(2);
+            }
+            fieldName = Character.toLowerCase(methodName.charAt(0)) + methodName.substring(1);
+            Field field = clazz.getDeclaredField(fieldName);
+            Column anno = field.getAnnotation(Column.class);
+            if (anno != null && !anno.value().isEmpty()) {
+                sb.append(anno.value());
+            } else {
+                sb.append(StrUtil.toLowerUnderline(methodName));
+            }
+            return sb.toString();
+        } catch (NoSuchFieldException e) {
+            throw new Sql4JException(e);
         }
-        sb.append(parseMethodName(sl));
-        return sb.toString();
     }
 
 }

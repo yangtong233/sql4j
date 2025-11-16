@@ -1,11 +1,13 @@
 package org.ytor.sql4j.core;
 
 import org.ytor.sql4j.Sql4JException;
+import org.ytor.sql4j.anno.Column;
 import org.ytor.sql4j.caster.TypeCaster;
 import org.ytor.sql4j.enums.DatabaseType;
 import org.ytor.sql4j.sql.SqlInfo;
 import org.ytor.sql4j.util.StrUtil;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -127,11 +129,20 @@ public class ExecResult {
             }
             Set<String> columns = row.keySet();
             for (Method method : clazz.getMethods()) {
+                String methodName = method.getName();
                 // 调用setter方法（setter方法定义：方法名称以set开头，并且参数个数等于1个）
-                if (method.getName().startsWith("set") && method.getParameterCount() == 1) {
+                if (methodName.startsWith("set") && method.getParameterCount() == 1) {
+                    methodName = methodName.substring(3);
                     Class<?> parameterType = method.getParameterTypes()[0];
-                    String fieldName = method.getName().substring(3);
-                    fieldName = StrUtil.toLowerUnderline(fieldName);
+                    // 获取字段名称
+                    String fieldName = Character.toLowerCase(methodName.charAt(0)) + methodName.substring(1);
+                    Field field = clazz.getDeclaredField(fieldName);
+                    Column anno = field.getAnnotation(Column.class);
+                    if (anno != null && !anno.value().isEmpty()) {
+                        fieldName = anno.value();
+                    } else {
+                        fieldName = StrUtil.toLowerUnderline(methodName);
+                    }
                     if (columns.contains(fieldName)) {
                         // 得到数据库中的原始值
                         Object value = row.get(fieldName);
@@ -149,7 +160,7 @@ public class ExecResult {
                 }
             }
             return bean;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchFieldException e) {
             throw new Sql4JException(e);
         }
     }

@@ -1,5 +1,6 @@
 package org.ytor.sql4j.translate.support.base;
 
+import org.ytor.sql4j.anno.Column;
 import org.ytor.sql4j.enums.SqlType;
 import org.ytor.sql4j.func.SFunction;
 import org.ytor.sql4j.func.SQLFunc;
@@ -8,10 +9,14 @@ import org.ytor.sql4j.sql.SqlInfo;
 import org.ytor.sql4j.sql.select.*;
 import org.ytor.sql4j.translate.ISelectTranslator;
 import org.ytor.sql4j.util.LambdaUtil;
+import org.ytor.sql4j.util.StrUtil;
 import org.ytor.sql4j.util.TableUtil;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -27,22 +32,60 @@ public class BaseSelectTranslator implements ISelectTranslator {
 
         // 1.SELECT 查询字段
         DistinctStage distinctStage = builder.getDistinctStage();
-        List<SFunction<?, ?>> selectColumns = builder.getSelectStage().getSelectColumn();
-        String selectColumnStr = selectColumns.stream().map(f -> {
+        StringJoiner joiner = new StringJoiner(",");
+        // 1.1 如果指定了查询字段
+        List<SFunction<?, ?>> selectColumns = builder.getSelectStage().getSelectColumns();
+        for (SFunction<?, ?> f : selectColumns) {
             // 函数字段
             if (f instanceof SQLFunc) {
                 SQLFunc func = (SQLFunc) f;
                 func.addAliasRegister(builder);
-                return func.getValue();
+                joiner.add(func.getValue());
             }
             // 普通表字段
             else {
-                return LambdaUtil.parseColumn(f, builder);
+                joiner.add(LambdaUtil.parseColumn(f, builder));
             }
-        }).collect(Collectors.joining(", "));
-        if (selectColumnStr.isEmpty()) {
-            selectColumnStr = "*";
         }
+
+        // 1.2 如果要查整张表
+        for (Class<?> table : builder.getSelectStage().getTableColumns()) {
+            for (Method method : table.getDeclaredMethods()) {
+                String methodName = method.getName();
+                // 获取 getter 方法
+                if ((methodName.startsWith("get") || methodName.startsWith("is")) && method.getParameterCount() == 0) {
+                    if (methodName.startsWith("get")) {
+                        methodName = methodName.substring(3);
+                    } else if (methodName.startsWith("is")) {
+                        methodName = methodName.substring(2);
+                    }
+                    // 将 getter 方法名称转为对应的字段名称
+                    String fieldName = Character.toLowerCase(methodName.charAt(0)) + methodName.substring(1);
+                    try {
+                        // 判断最终的字段名称
+                        Field field = table.getDeclaredField(fieldName);
+                        Column anno = field.getAnnotation(Column.class);
+                        StringBuilder alias = new StringBuilder();
+                        if (!builder.single()) {
+                            alias.append(builder.getAlias(table)).append('.');
+                        }
+                        if (anno != null && !anno.value().isEmpty()) {
+                            alias.append(StrUtil.toLowerUnderline(anno.value()));
+                        } else {
+                            alias.append(StrUtil.toLowerUnderline(fieldName));
+                        }
+                        joiner.add(alias.toString());
+                    } catch (NoSuchFieldException e) {
+                        builder.getSQLHelper().getLogger().warn(e.getMessage());
+                    }
+                }
+            }
+        }
+
+        if (joiner.length() == 0) {
+            joiner.add("*");
+        }
+        String selectColumnStr = joiner.toString();
         sql.append("SELECT ");
         if (distinctStage != null && !"*".equals(selectColumnStr)) {
             sql.append("DISTINCT").append(' ');

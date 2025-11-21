@@ -77,7 +77,7 @@ public class BaseInsertTranslator implements IInsertTranslator {
         } else if (selectValueStage != null) {
             // 2. INSERT INTO 字段
             // INSERT INTO SELECT 时，强行限制插入字段和查询字段必须一致
-            List<SFunction<?, ?>> columns = selectValueStage.getSubSelect().getSelectBuilder().getSelectStage().getSelectColumn();
+            List<SFunction<?, ?>> columns = selectValueStage.getSubSelect().getSelectBuilder().getSelectStage().getSelectColumns();
             if (columns == null || columns.isEmpty()) {
                 throw new Sql4JException("INSERT INTO SELECT 时，必须指定 SELECT 字段");
             }

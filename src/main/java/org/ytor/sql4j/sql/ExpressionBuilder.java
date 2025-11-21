@@ -201,7 +201,7 @@ public class ExpressionBuilder extends AbsSql {
      * IN 子查询
      */
     public <T> ExpressionBuilder in(SFunction<T, ?> column, AbsSelect subSelect) {
-        int columnCount = subSelect.getSelectBuilder().getSelectStage().getSelectColumn().size();
+        int columnCount = subSelect.getSelectBuilder().getSelectStage().getSelectColumns().size();
         if (columnCount != 1) {
             throw new Sql4JException("IN 子查询时，查询字段必须为1，目前查询字段：【" + columnCount + "】");
         }

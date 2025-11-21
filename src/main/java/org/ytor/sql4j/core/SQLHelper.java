@@ -151,6 +151,11 @@ public class SQLHelper {
         return new SelectStage(selectBuilder, Arrays.asList(columns));
     }
 
+    public SelectStage select(Class<?> tableColumns) {
+        SelectBuilder selectBuilder = new SelectBuilder(this);
+        return new SelectStage(selectBuilder, tableColumns);
+    }
+
     public InsertStage insert(Class<?> table) {
         InsertBuilder insertBuilder = new InsertBuilder(this);
         return new InsertStage(insertBuilder, table);

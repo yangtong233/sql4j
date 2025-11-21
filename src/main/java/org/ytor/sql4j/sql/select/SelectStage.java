@@ -15,18 +15,29 @@ public class SelectStage extends AbsSelect implements SelectEndStage {
     /**
      * SELECT 查询字段
      */
-    private final List<SFunction<?, ?>> selectColumn = new ArrayList<>();
+    private final List<SFunction<?, ?>> selectColumns = new ArrayList<>();
+
+    /**
+     * SELECT 查询指定表的全部字段
+     */
+    private final List<Class<?>> tableColumns = new ArrayList<>();
 
     public <T> SelectStage(SelectBuilder selectBuilder, SFunction<T, ?> selectColumns) {
         setSelectBuilder(selectBuilder);
         selectBuilder.setSelectStage(this);
-        this.selectColumn.add(selectColumns);
+        this.selectColumns.add(selectColumns);
     }
 
     public SelectStage(SelectBuilder selectBuilder, List<SFunction<?, ?>> selectColumns) {
         setSelectBuilder(selectBuilder);
         selectBuilder.setSelectStage(this);
-        this.selectColumn.addAll(selectColumns);
+        this.selectColumns.addAll(selectColumns);
+    }
+
+    public SelectStage(SelectBuilder selectBuilder, Class<?> tableColumns) {
+        setSelectBuilder(selectBuilder);
+        selectBuilder.setSelectStage(this);
+        this.tableColumns.add(tableColumns);
     }
 
     /**
@@ -34,7 +45,15 @@ public class SelectStage extends AbsSelect implements SelectEndStage {
      */
     @SafeVarargs
     public final <T> SelectStage select(SFunction<T, ?>... columns) {
-        Collections.addAll(selectColumn, columns);
+        Collections.addAll(selectColumns, columns);
+        return this;
+    }
+
+    /**
+     * SELECT 后可能继续 SELECT
+     */
+    public SelectStage select(Class<?> clazz) {
+        Collections.addAll(this.tableColumns, clazz);
         return this;
     }
 
@@ -60,8 +79,12 @@ public class SelectStage extends AbsSelect implements SelectEndStage {
         return getSelectBuilder().getTranslator().translate(getSelectBuilder());
     }
 
-    public List<SFunction<?, ?>> getSelectColumn() {
-        return selectColumn;
+    public List<SFunction<?, ?>> getSelectColumns() {
+        return selectColumns;
+    }
+
+    public List<Class<?>> getTableColumns() {
+        return tableColumns;
     }
 
     @Override
